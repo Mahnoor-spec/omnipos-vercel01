@@ -44,6 +44,7 @@ interface StoreState {
     menuItems: Product[];
     tables: any[];
     notifications: any[];
+    tenants: any[];
     logs: string[];
     branding: any;
     deviceId: string;
@@ -58,6 +59,7 @@ interface StoreState {
     fetchMenu: () => Promise<void>;
     fetchTables: () => Promise<void>;
     fetchNotifications: () => Promise<void>;
+    fetchTenants: () => Promise<void>;
     createOrder: (order: any) => Promise<void>;
     updateOrderStatus: (id: string, status: string) => Promise<void>;
     syncOrders: () => Promise<void>;
@@ -70,13 +72,14 @@ export const useStore = create<StoreState>()(
             user: null,
             token: null,
             isAuthenticated: false,
-            currentTenantId: '00000000-0000-0000-0000-000000001111',
+            currentTenantId: 'default-tenant-id',
             currentView: 'Dashboard',
             orders: [],
             categories: [],
             menuItems: [],
             tables: [],
             notifications: [],
+            tenants: [],
             logs: ['> OmniPOS - System ready...'],
             deviceId: `tablet-${Math.floor(Math.random() * 1000)}`,
             branding: {
@@ -103,6 +106,8 @@ export const useStore = create<StoreState>()(
                             currentTenantId: data.user.tenantId,
                         });
                         get().addLog(`User ${data.user.fullName} logged in.`);
+                        // Fetch initial data
+                        get().fetchTenants();
                         return { success: true };
                     } else {
                         const err = await response.json();
@@ -200,6 +205,16 @@ export const useStore = create<StoreState>()(
                 }
             },
 
+            fetchTenants: async () => {
+                // Mock implementation since we don't have a /api/tenants endpoint yet
+                // But this prevents the Sidebar crash
+                set({
+                    tenants: [
+                        { id: 'default-tenant-id', name: 'OmniPOS Main' }
+                    ]
+                });
+            },
+
             createOrder: async (orderData) => {
                 const { token, currentTenantId, deviceId } = get();
                 if (!token) return;
@@ -287,7 +302,7 @@ export const useStore = create<StoreState>()(
             }
         }),
         {
-            name: 'omnipos-storage',
+            name: 'omnipos-storage-v2',
             storage: createJSONStorage(() => sessionStorage),
         }
     )
