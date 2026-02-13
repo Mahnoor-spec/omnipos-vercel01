@@ -4,7 +4,7 @@ import { verifyAuth } from '@/lib/auth';
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const user = await verifyAuth(request);
     if (!user) {
@@ -12,7 +12,7 @@ export async function POST(
     }
 
     try {
-        const { id } = params;
+        const { id } = await params;
         await prisma.notification.update({
             where: { id },
             data: { isRead: true },
