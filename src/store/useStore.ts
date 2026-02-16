@@ -206,13 +206,20 @@ export const useStore = create<StoreState>()(
             },
 
             fetchTenants: async () => {
-                // Mock implementation since we don't have a /api/tenants endpoint yet
-                // But this prevents the Sidebar crash
-                set({
-                    tenants: [
-                        { id: 'default-tenant-id', name: 'OmniPOS Main' }
-                    ]
-                });
+                const { token } = get();
+                if (!token) return;
+                try {
+                    const response = await fetch('/api/tenants', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (response.ok) {
+                        set({ tenants: await response.json() });
+                    }
+                } catch (error) {
+                    console.error('Fetch tenants failed', error);
+                }
             },
 
             createOrder: async (orderData) => {

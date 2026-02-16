@@ -74,6 +74,98 @@ async function main() {
     }
 
     console.log('Staff accounts seeded successfully.');
+
+    // Seed Tables (1-10)
+    for (let i = 1; i <= 10; i++) {
+        const tableNum = `Table ${i}`;
+        const existingTable = await prisma.restaurantTable.findFirst({
+            where: {
+                tenantId: tenant.id,
+                tableNumber: tableNum
+            }
+        });
+
+        if (!existingTable) {
+            await prisma.restaurantTable.create({
+                data: {
+                    tenantId: tenant.id,
+                    tableNumber: tableNum,
+                    capacity: 4,
+                    posX: i * 100,
+                    posY: 100,
+                    status: 'Available',
+                }
+            });
+        }
+    }
+    console.log('Tables seeded.');
+
+    // Seed Menu Categories
+    const categories = [
+        { name: 'Starters' },
+        { name: 'Mains' },
+        { name: 'Drinks' },
+        { name: 'Desserts' }
+    ];
+
+    const categoryMap = new Map();
+
+    for (const cat of categories) {
+        let category = await prisma.category.findFirst({
+            where: {
+                tenantId: tenant.id,
+                name: cat.name
+            }
+        });
+
+        if (!category) {
+            category = await prisma.category.create({
+                data: {
+                    tenantId: tenant.id,
+                    name: cat.name,
+                }
+            });
+        }
+        categoryMap.set(cat.name, category.id);
+    }
+    console.log('Categories seeded.');
+
+    // Seed Products
+    const products = [
+        { name: 'Garlic Bread', price: 4.50, category: 'Starters' },
+        { name: 'Chicken Wings', price: 6.95, category: 'Starters' },
+        { name: 'Cheeseburger', price: 12.50, category: 'Mains' },
+        { name: 'Steak Frites', price: 18.00, category: 'Mains' },
+        { name: 'Caesar Salad', price: 10.50, category: 'Mains' },
+        { name: 'Coca Cola', price: 2.50, category: 'Drinks' },
+        { name: 'Orange Juice', price: 3.00, category: 'Drinks' },
+        { name: 'Chocolate Cake', price: 5.50, category: 'Desserts' }
+    ];
+
+    for (const p of products) {
+        if (categoryMap.has(p.category)) {
+            const catId = categoryMap.get(p.category);
+            const existingProduct = await prisma.product.findFirst({
+                where: {
+                    tenantId: tenant.id,
+                    categoryId: catId,
+                    name: p.name
+                }
+            });
+
+            if (!existingProduct) {
+                await prisma.product.create({
+                    data: {
+                        tenantId: tenant.id,
+                        categoryId: catId,
+                        name: p.name,
+                        price: p.price,
+                    }
+                });
+            }
+        }
+    }
+    console.log('Menu items seeded.');
 }
 
 main()
